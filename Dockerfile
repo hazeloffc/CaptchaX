@@ -1,8 +1,6 @@
 FROM node:20-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   chromium \
@@ -16,10 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libcairo2 \
   libcups2 \
   libdbus-1-3 \
+  libdrm2 \
   libexpat1 \
   libfontconfig1 \
   libgbm1 \
-  libgcc1 \
+  libgcc-s1 \
   libglib2.0-0 \
   libgtk-3-0 \
   libnspr4 \
@@ -36,6 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libxext6 \
   libxfixes3 \
   libxi6 \
+  libxkbcommon0 \
   libxrandr2 \
   libxrender1 \
   libxss1 \
@@ -47,14 +47,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install --omit=dev
+COPY package.json ./
+RUN npm install --omit=dev --no-audit --no-fund
 
 COPY . .
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV CHROME_PATH=/usr/bin/chromium
-
-EXPOSE 5000
+ENV NODE_ENV=production
 
 CMD ["sh", "-c", "xvfb-run -a node src/index.js"]

@@ -63,9 +63,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: err.message || 'Internal Server Error' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Captcha Solver JS running on port ${PORT}`);
-  console.log(`http://localhost:${PORT}`);
 });
 
 module.exports = app;
