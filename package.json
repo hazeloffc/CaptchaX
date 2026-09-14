@@ -1,0 +1,32 @@
+{
+  "name": "turnstile-solver-js",
+  "version": "1.0.0",
+  "description": "Cloudflare Turnstile solver - Pure Node.js",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@napi-rs/canvas": "^1.0.0",
+    "axios": "^1.16.1",
+    "chalk": "*",
+    "cloudflared": "^0.7.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "playwright": "^1.54.0",
+    "playwright-core": "^1.54.1",
+    "playwright-extra": "^4.3.6",
+    "puppeteer": "^24.12.1",
+    "puppeteer-core": "^24.12.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "puppeteer-real-browser": "^1.4.3",
+    "winston": "^3.19.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
