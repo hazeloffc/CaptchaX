@@ -56,4 +56,4 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV CHROME_PATH=/usr/bin/chromium
 ENV NODE_ENV=production
 
-CMD ["sh", "-c", "xvfb-run -a node src/index.js"]
+CMD ["node", "src/index.js"]

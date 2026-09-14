@@ -7,7 +7,8 @@ const solveRoute = require('./routes/solve');
 const healthRoute = require('./routes/health');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT, 10) || 5000;
+console.log(`[boot] PORT env=${process.env.PORT} -> listen ${PORT}`);
 
 app.use(helmet());
 app.use(cors());
@@ -65,8 +66,12 @@ app.use((err, req, res, next) => {
 
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+process.on('uncaughtException', (e) => console.error('[fatal] uncaught:', e.message));
+process.on('unhandledRejection', (e) => console.error('[fatal] unhandled:', e?.message || e));
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Captcha Solver JS running on port ${PORT}`);
 });
+server.on('error', (e) => { console.error('[fatal] listen:', e.message); process.exit(1); });
 
 module.exports = app;
