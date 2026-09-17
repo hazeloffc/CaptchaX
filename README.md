@@ -1,6 +1,6 @@
 # cf-solve — All-in-One Captcha Solver API
 
-Turnstile, reCAPTCHA v3, Altcha PoW, FriendlyCaptcha PoW, hCaptcha, Aliyun Captcha 2.0, Cloudflare challenge (`cf_clearance`), WAF session, page source.
+Turnstile, reCAPTCHA v3, Altcha PoW, FriendlyCaptcha PoW, hCaptcha, Aliyun Captcha 2.0, Cloudflare challenge (`cf_clearance`), WAF session, page source, sitekey detector.
 
 > Kejujuran API: endpoint PoW & token (turnstile, v3, altcha, friendly) **deterministik 100%**. Endpoint `hcaptcha` & `aliyun` adalah **best-effort** (lolos bila risiko rendah / tipe cocok) dan selalu menjawab jujur `success:false` + alasan bila tidak bisa.
 
@@ -122,6 +122,50 @@ Ambil HTML hasil render browser (lolos proteksi dasar).
 ```
 Response: `{ "success": true, "html": "<!DOCTYPE html>...", "duration": 8.1 }`
 
+### POST /api/get-sitekey
+Deteksi otomatis sitekey captcha dari URL target beserta klasifikasi tipenya. Memakai browser untuk memuat halaman, lalu memindai atribut DOM (`data-sitekey` dll.), inline script, global variable JS, iframe `src`, dan network request/response.
+```json
+{ "url": "https://example.com/login", "timeout": 30 }
+```
+Response:
+```json
+{
+  "success": true,
+  "url": "https://example.com/login",
+  "final_url": "https://example.com/login",
+  "title": "Login - Example",
+  "detected_providers": ["recaptcha", "turnstile"],
+  "sitekeys": [
+    {
+      "type": "recaptcha",
+      "label": "Google reCAPTCHA",
+      "variant": "v2-or-v3",
+      "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",
+      "pattern": "6L-prefixed (Google reCAPTCHA)",
+      "sources": ["dom:data-sitekey", "recaptcha-render-param"],
+      "solver": "/api/captchav3",
+      "solver_param": "sitekey"
+    }
+  ],
+  "aliyun_hint": null,
+  "total_keys_found": 1,
+  "duration": 7.2
+}
+```
+Tipe sitekey yang dikenali otomatis:
+
+| `type` | Label | Pola sitekey | Solver endpoint |
+|---|---|---|---|
+| `turnstile` | Cloudflare Turnstile | diawali `0x` (mis. `0x4AAAAAA...`) | `/api/turnstile` |
+| `recaptcha` | Google reCAPTCHA (v2/v3/enterprise) | diawali `6L` | `/api/captchav3` |
+| `hcaptcha` | hCaptcha | format UUID `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` | `/api/hcaptcha` |
+| `friendly` | FriendlyCaptcha | diawali `FCM` / `FCS` | `/api/friendly` |
+| `altcha` | Altcha (possible) | base64 panjang (tanpa static sitekey; pakai `challengeurl`) | `/api/altcha` |
+
+Bila Aliyun Captcha terdeteksi, response menyertakan `aliyun_hint` yang mengarahkan ke `/api/aliyun-extract` karena Aliyun memakai `sceneId` + `prefix` (bukan sitekey tradisional).
+
+Field `solver` dan `solver_param` menunjukkan endpoint + nama parameter yang bisa langsung dipakai untuk solve, jadi kamu bisa otomatis meneruskan `sitekey` yang ditemukan ke solver yang sesuai.
+
 ### Test keys
 | Solver | Sitekey test | Hasil |
 |---|---|---|
@@ -134,7 +178,7 @@ Rate limit default 5 req/menit/IP (`MAX_REQUESTS_PER_MINUTE`).
 ## Struktur
 
 - `src/index.js` — Express app (PORT dari env)
-- `src/routes/solve.js` — `/turnstile`, `/turnstile-max`, `/captchav3`, `/altcha`, `/friendly`, `/hcaptcha`, `/aliyun`, `/cloudflare`, `/waf-session`, `/source`
+- `src/routes/solve.js` — `/turnstile`, `/turnstile-max`, `/captchav3`, `/altcha`, `/friendly`, `/hcaptcha`, `/aliyun`, `/aliyun-extract`, `/cloudflare`, `/waf-session`, `/source`, `/get-sitekey`
 - `src/routes/health.js` — `/health`
 - `src/services/turnstile.js` — BypassService (fakePage render + action, max, wafSession, getSource)
 - `src/services/browser.js` — puppeteer-real-browser pool + xvfb
@@ -144,4 +188,5 @@ Rate limit default 5 req/menit/IP (`MAX_REQUESTS_PER_MINUTE`).
 - `src/services/hcaptcha.js` — hCaptcha checkbox/invisible via browser (best-effort, fail-fast saat image challenge)
 - `src/services/aliyun.js` — Aliyun Captcha 2.0 harvest (best-effort, closed-loop puzzle drag + jimp gap-detect)
 - `src/services/extractAliyun.js` — deteksi sceneId/prefix/region Aliyun dari URL halaman target
+- `src/services/getSitekey.js` — deteksi & klasifikasi otomatis sitekey (turnstile/recaptcha/hcaptcha/friendly/altcha) dari URL target
 - `src/services/cloudflare.js` — challenge clicker → cf_clearance
