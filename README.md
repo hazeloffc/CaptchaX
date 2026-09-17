@@ -10,6 +10,13 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ryuhandev/CaptchaX/stargazers"><img src="https://img.shields.io/github/stars/ryuhandev/CaptchaX?style=for-the-badge&logo=github&label=stars&color=2563eb" alt="Stars"></a>
+  <a href="https://github.com/ryuhandev/CaptchaX/forks"><img src="https://img.shields.io/github/forks/ryuhandev/CaptchaX?style=for-the-badge&logo=github&label=forks&color=4f46e5" alt="Forks"></a>
+  <a href="https://github.com/ryuhandev/CaptchaX/issues"><img src="https://img.shields.io/github/issues/ryuhandev/CaptchaX?style=for-the-badge&logo=github&label=issues&color=ef4444" alt="Issues"></a>
+  <a href="https://github.com/ryuhandev/CaptchaX/commits/main"><img src="https://img.shields.io/github/last-commit/ryuhandev/CaptchaX?style=for-the-badge&label=last%20commit&color=0891b2" alt="Last commit"></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/repo-private-181717?style=for-the-badge&logo=github&logoColor=white" alt="Private">
   <img src="https://img.shields.io/badge/version-5.1.1-4f46e5?style=for-the-badge" alt="Version">
   <a href="https://github.com/ryuhandev/CaptchaX/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-22c55e?style=for-the-badge" alt="License"></a>
@@ -27,7 +34,6 @@
   <img src="https://img.shields.io/badge/docker-ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/railway-deploy-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway">
   <img src="https://img.shields.io/badge/platform-linux%20%7C%20docker-94a3b8?style=for-the-badge&logo=linux&logoColor=white" alt="Platform">
-  <img src="https://img.shields.io/badge/status-production-16a34a?style=for-the-badge" alt="Status">
 </p>
 
 <p align="center">
@@ -124,17 +130,6 @@ Semua solver berjalan di satu proses Express, memakai browser headless (Puppetee
 
 ## Quick Start
 
-<table>
-<tr>
-<td width="26%" valign="top">
-
-<p align="center">
-  <img src="assets/character-01.png" alt="CaptchaX mascot" width="220">
-</p>
-
-</td>
-<td width="74%" valign="top">
-
 ### Jalankan lokal
 
 ```bash
@@ -163,9 +158,7 @@ docker run --rm -p 8080:8080 --env-file .env captchax
 
 Image sudah memuat Chromium dari apt dan seluruh dependensi sistem yang dibutuhkan solver berbasis browser.
 
-</td>
-</tr>
-</table>
+---
 
 ### Variabel Environment
 
@@ -201,6 +194,10 @@ docker run -d --name captchax --restart unless-stopped -p 8080:8080 --env-file .
 ### E2E Workflow
 
 `.github/workflows/e2e.yml` disediakan untuk uji end-to-end. Workflow ini memakai placeholder URL, jadi isi URL instance kamu sendiri saat menjalankan workflow via `workflow_dispatch`.
+
+<p align="right">
+  <img src="assets/character-04.png" alt="CaptchaX mascot" width="300">
+</p>
 
 ---
 
@@ -518,6 +515,10 @@ Bila Aliyun Captcha terdeteksi, respons menyertakan `aliyun_hint` yang mengarahk
 | reCAPTCHA v3 | `6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI` | token valid |
 | FriendlyCaptcha | `FCMGEMUD2M567T8G` (demo homepage) | solusi valid |
 
+<p align="center">
+  <img src="assets/character-01.png" alt="CaptchaX mascot" width="380">
+</p>
+
 ---
 
 ## Struktur Proyek
@@ -564,41 +565,33 @@ CaptchaX/
 
 ## FAQ
 
-<table>
-<tr>
-<td width="72%" valign="top">
-
 **Apakah semua solver dijamin berhasil?**
+
 Tidak. Endpoint PoW dan token (turnstile, reCAPTCHA v3, altcha, friendly) deterministik, tetapi `hcaptcha` dan `aliyun` bergantung pada profil risiko dan tipe challenge yang muncul. API selalu melaporkan kegagalan secara eksplisit.
 
 **Kenapa `hcaptcha` gagal padahal sitekey benar?**
+
 Umumnya karena muncul image challenge. Solver hanya menangani checkbox dan invisible, dan berhenti lebih awal agar tidak menunggu timeout.
 
 **Berapa lama token valid?**
+
 Token Turnstile, reCAPTCHA, dan hCaptcha berumur pendek dan terikat domain serta sesi. Kirim ke server target segera setelah diterima.
 
 **Bisakah token dipakai dari IP berbeda?**
+
 Tidak disarankan. Untuk Aliyun, verifikasi wajib dari IP yang sama karena token terikat sesi.
 
 **Kenapa endpoint browser sering OOM di Railway?**
+
 Chromium butuh memori. Naikkan plan atau RAM instance, dan hindari memanggil endpoint browser secara paralel dalam jumlah besar.
 
 **Apakah bisa dipakai untuk mengklik urutan gambar Aliyun?**
+
 Belum. Tipe icon-click tidak didukung dan API menjawab `success: false`.
 
 **Apakah ada autentikasi API?**
+
 Belum ada API key bawaan. Lindungi instance dengan proxy, IP allowlist, atau reverse proxy milik sendiri sebelum mengeksposnya ke publik.
-
-</td>
-<td width="28%" valign="middle">
-
-<p align="center">
-  <img src="assets/character-03.png" alt="CaptchaX mascot" width="215">
-</p>
-
-</td>
-</tr>
-</table>
 
 ---
 
@@ -620,16 +613,13 @@ Belum ada API key bawaan. Lindungi instance dengan proxy, IP allowlist, atau rev
 - [ ] Image challenge solver untuk hCaptcha
 - [ ] Unit test untuk solver PoW tanpa browser
 
-<table>
-<tr>
-<td width="22%" valign="middle">
+<br>
 
-<p align="center">
-  <img src="assets/character-04.png" alt="CaptchaX mascot" width="230">
+<p align="left">
+  <img src="assets/character-03.png" alt="CaptchaX mascot" width="230">
 </p>
 
-</td>
-<td width="78%" valign="top">
+---
 
 ## Kontribusi
 
@@ -641,10 +631,6 @@ Kontribusi, issue, dan pull request terbuka untuk siapa saja. Alur yang dianjurk
 4. Buat pull request dengan deskripsi singkat: masalah, pendekatan, dan cara menguji.
 
 Untuk bug report, sertakan endpoint, payload tanpa data sensitif, dan isi respons `error` atau `reason`, serta versi Node dan platform deploy yang dipakai.
-
-</td>
-</tr>
-</table>
 
 ---
 
