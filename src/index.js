@@ -20,7 +20,7 @@ app.use('/api', healthRoute);
 app.get('/', (req, res) => {
   res.json({
     name: 'Captcha Solver JS',
-    version: '5.0.0',
+    version: '5.1.0',
     endpoints: {
       'POST /api/turnstile': 'Solve Turnstile (min, fake page, optional action)',
       'POST /api/turnstile-max': 'Solve Turnstile on real page URL',
@@ -75,7 +75,10 @@ app.get('/', (req, res) => {
         body: {
           sitekey: '10000000-ffff-ffff-ffff-000000000001',
           siteurl: 'https://example.com',
-          timeout: 60
+          timeout: 60,
+          rqdata: '(optional, enterprise)',
+          invisible: false,
+          debug: false
         }
       },
       aliyun: {
@@ -85,7 +88,10 @@ app.get('/', (req, res) => {
           sceneId: 'XXXX',
           prefix: 'xxxxxx',
           region: 'sgp',
-          timeout: 120
+          language: 'en',
+          mode: 'popup',
+          timeout: 120,
+          debug: false
         }
       },
       captchav3: {
