@@ -20,13 +20,15 @@ app.use('/api', healthRoute);
 app.get('/', (req, res) => {
   res.json({
     name: 'Captcha Solver JS',
-    version: '4.0.0',
+    version: '5.0.0',
     endpoints: {
       'POST /api/turnstile': 'Solve Turnstile (min, fake page, optional action)',
       'POST /api/turnstile-max': 'Solve Turnstile on real page URL',
       'POST /api/captchav3': 'Solve reCAPTCHA v3 (no browser)',
       'POST /api/altcha': 'Solve Altcha PoW (challenge JSON or challengeurl)',
       'POST /api/friendly': 'Solve FriendlyCaptcha PoW (official solver)',
+      'POST /api/hcaptcha': 'Solve hCaptcha checkbox (best-effort)',
+      'POST /api/aliyun': 'Solve Aliyun Captcha 2.0 (sceneId+prefix, best-effort)',
       'POST /api/cloudflare': 'Bypass Cloudflare challenge (cf_clearance)',
       'POST /api/waf-session': 'Get WAF session cookies + headers',
       'POST /api/source': 'Get rendered page HTML source',
@@ -65,6 +67,25 @@ app.get('/', (req, res) => {
         body: {
           sitekey: 'FCM...',
           timeout: 180
+        }
+      },
+      hcaptcha: {
+        method: 'POST',
+        url: '/api/hcaptcha',
+        body: {
+          sitekey: '10000000-ffff-ffff-ffff-000000000001',
+          siteurl: 'https://example.com',
+          timeout: 60
+        }
+      },
+      aliyun: {
+        method: 'POST',
+        url: '/api/aliyun',
+        body: {
+          sceneId: 'XXXX',
+          prefix: 'xxxxxx',
+          region: 'sgp',
+          timeout: 120
         }
       },
       captchav3: {

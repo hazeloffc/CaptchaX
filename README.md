@@ -1,8 +1,8 @@
 # cf-solve — All-in-One Captcha Solver API
 
-100% deterministik, tanpa tebak gambar: Turnstile, reCAPTCHA v3, Altcha PoW, FriendlyCaptcha PoW, Cloudflare challenge (`cf_clearance`), WAF session, page source.
+Turnstile, reCAPTCHA v3, Altcha PoW, FriendlyCaptcha PoW, hCaptcha, Aliyun Captcha 2.0, Cloudflare challenge (`cf_clearance`), WAF session, page source.
 
-> Prinsip repo ini: endpoint yang bisa gagal (tantangan gambar reCAPTCHA v2 / hCaptcha) **tidak disertakan**. Semua endpoint di bawah selalu memberi hasil selama input valid.
+> Kejujuran API: endpoint PoW & token (turnstile, v3, altcha, friendly) **deterministik 100%**. Endpoint `hcaptcha` & `aliyun` adalah **best-effort** (lolos bila risiko rendah / tipe cocok) dan selalu menjawab jujur `success:false` + alasan bila tidak bisa.
 
 ## Deploy ke Railway
 
@@ -75,6 +75,21 @@ Tambahkan `puzzleEndpoint` bila situs memakai endpoint custom (default global `h
 Response: `{ "success": true, "solution": "sig.b64.sol.diag", "puzzles": 48, "field": "frc-captcha-solution", "duration": 50.8 }`
 Isi `solution` ke field `frc-captcha-solution` di form tujuan.
 
+### POST /api/hcaptcha
+hCaptcha checkbox via browser (best-effort — lolos bila tanpa image challenge).
+```json
+{ "sitekey": "10000000-ffff-ffff-ffff-000000000001", "siteurl": "https://example.com", "timeout": 60 }
+```
+
+### POST /api/aliyun
+Aliyun Captcha 2.0 ala CapMonster (best-effort): widget dirender di halaman minimal milik sendiri bermodal `sceneId` + `prefix` situs target — tanpa mengunjungi situs target. TRACELESS/ONE_CLICK/SLIDE tanpa CV; PUZZLE pakai deteksi gap (jimp) + drag overshoot ala manusia.
+```json
+{ "sceneId": "XXXX", "prefix": "xxxxxx", "region": "sgp", "timeout": 120 }
+```
+`sceneId` + `prefix` diambil dari Network tab situs target (request ke `*.captcha-open.aliyuncs.com`), `region`: `sgp`/`cn` (samakan dengan konfigurasi situs).
+Response: `{ "success": true, "verifyParam": "...", "duration": 25.4 }`
+`verifyParam` (captchaVerifyParam) langsung dipakai untuk request bisnis ke server situs target. Token sekali pakai & terikat sesi — verifikasi dari IP yang sama.
+
 ### POST /api/cloudflare
 Bypass Cloudflare challenge → `cf_clearance`.
 ```json
@@ -108,11 +123,13 @@ Rate limit default 5 req/menit/IP (`MAX_REQUESTS_PER_MINUTE`).
 ## Struktur
 
 - `src/index.js` — Express app (PORT dari env)
-- `src/routes/solve.js` — `/turnstile`, `/turnstile-max`, `/captchav3`, `/altcha`, `/friendly`, `/cloudflare`, `/waf-session`, `/source`
+- `src/routes/solve.js` — `/turnstile`, `/turnstile-max`, `/captchav3`, `/altcha`, `/friendly`, `/hcaptcha`, `/aliyun`, `/cloudflare`, `/waf-session`, `/source`
 - `src/routes/health.js` — `/health`
 - `src/services/turnstile.js` — BypassService (fakePage render + action, max, wafSession, getSource)
 - `src/services/browser.js` — puppeteer-real-browser pool + xvfb
 - `src/services/captchaV3.js` — reCAPTCHA v3 tanpa browser (anchor/reload)
 - `src/services/altcha.js` — Altcha PoW v1 (brute force SHA, sesuai `altcha-lib`)
 - `src/services/friendly.js` — FriendlyCaptcha PoW v1 (solver WASM resmi `friendly-pow`)
+- `src/services/hcaptcha.js` — hCaptcha checkbox via browser (best-effort)
+- `src/services/aliyun.js` — Aliyun Captcha 2.0 harvest (best-effort, jimp gap-detect)
 - `src/services/cloudflare.js` — challenge clicker → cf_clearance
