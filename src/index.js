@@ -33,6 +33,7 @@ app.get('/', (req, res) => {
       'POST /api/cloudflare': 'Bypass Cloudflare challenge (cf_clearance)',
       'POST /api/waf-session': 'Get WAF session cookies + headers',
       'POST /api/source': 'Get rendered page HTML source',
+      'POST /api/get-sitekey': 'Detect & classify captcha sitekeys from a target URL (turnstile/recaptcha/hcaptcha/friendly/altcha)',
       'GET /api/health': 'Health check'
     },
     usage: {
@@ -110,6 +111,14 @@ app.get('/', (req, res) => {
         body: {
           url: 'https://example.com',
           headless: true,
+          timeout: 30
+        }
+      },
+      getSitekey: {
+        method: 'POST',
+        url: '/api/get-sitekey',
+        body: {
+          url: 'https://example.com/login',
           timeout: 30
         }
       }

@@ -9,6 +9,7 @@ const { solveHCaptcha } = require('../services/hcaptcha');
 const { solveAliyun } = require('../services/aliyun');
 const { extractAliyunParams } = require('../services/extractAliyun');
 const { solveCloudflare } = require('../services/cloudflare');
+const { getSitekey } = require('../services/getSitekey');
 
 const requestCounts = new Map();
 const MAX_REQUESTS = parseInt(process.env.MAX_REQUESTS_PER_MINUTE) || 5;
@@ -513,6 +514,54 @@ router.post('/aliyun', async (req, res) => {
       error: error.message,
       ...(req.body && req.body.debug === true && error.debug ? { debug: error.debug } : {})
     });
+  } finally {
+    if (browserService) {
+      await browserService.shutdown();
+    }
+  }
+});
+
+router.post('/get-sitekey', async (req, res) => {
+  const startTime = Date.now();
+  let browserService = null;
+
+  try {
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (!checkRateLimit(clientIp)) {
+      return res.status(429).json({ success: false, error: 'Rate limit exceeded' });
+    }
+
+    const { url, timeout } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ success: false, error: 'url is required' });
+    }
+
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).json({ success: false, error: 'Invalid url' });
+    }
+
+    const solveTimeout = Math.min(Math.max(timeout || 30, 10), 90);
+
+    browserService = new BrowserService();
+    await browserService.initialize();
+
+    const result = await getSitekey({
+      url,
+      timeout: solveTimeout * 1000,
+      browserService,
+    });
+
+    res.json({
+      success: true,
+      ...result.data,
+      duration: parseFloat(((Date.now() - startTime) / 1000).toFixed(2)),
+    });
+  } catch (error) {
+    console.error('[get-sitekey] Error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
   } finally {
     if (browserService) {
       await browserService.shutdown();
