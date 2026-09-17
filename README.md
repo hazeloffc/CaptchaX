@@ -86,8 +86,16 @@ Aliyun Captcha 2.0 ala CapMonster (best-effort): widget dirender di halaman mini
 ```json
 { "sceneId": "XXXX", "prefix": "xxxxxx", "region": "sgp", "timeout": 120 }
 ```
-`sceneId` + `prefix` diambil dari Network tab situs target (request ke `*.captcha-open.aliyuncs.com`), `region`: `sgp`/`cn` (samakan dengan konfigurasi situs).
+`sceneId` + `prefix` diambil dari Network tab situs target saat captcha muncul: `prefix` = subdomain dari `https://<prefix>.captcha-open.*.aliyuncs.com`, `sceneId` dari payload/body request, `region`: `sgp`/`cn` (samakan dengan console; solver otomatis coba region satunya bila init gagal).
+Bila init gagal (`INIT_FAIL`) artinya ketiganya tidak cocok / scene tidak aktif — solver langsung menjawab jujur tanpa menunggu timeout.
 Opsional: `language` (`en`/`cn`/`tw`), `mode` (`popup`/`embed`/`float`), `sdkUrl` (override CDN SDK), `debug: true` (balikan `debug`: stages, attempts, screenshot saat gagal).
+
+### POST /api/aliyun-extract
+Deteksi otomatis `region` + `prefix` + `sceneId` dari URL halaman target (best-effort — captcha biasanya baru dimuat setelah aksi seperti klik Login, jadi pakai URL yang memicu captcha).
+```json
+{ "url": "https://example.com/login", "timeout": 30 }
+```
+Response: `{ "success": true, "region": "sgp", "prefix": "xxxxxx", "sceneId": "XXXX", "sceneIds": [...], "apiGetLib": "...", "requests": [...], "hint": "ok" }`
 Cara kerja: TRACELESS lolos otomatis; BEHAVIOR-SLIDE drag penuh ala manusia; PUZZLE-SLIDE deteksi gap (`shadow.png` vs `back.png`, template-match jimp) + drag closed-loop (posisi piece dibaca live tiap langkah sampai tepat di gap) + retry multi-attempt dengan koreksi.
 Response: `{ "success": true, "verifyParam": "...", "duration": 25.4 }`
 `verifyParam` (captchaVerifyParam) langsung dipakai untuk request bisnis ke server situs target. Token sekali pakai & terikat sesi — verifikasi dari IP yang sama.
@@ -135,4 +143,5 @@ Rate limit default 5 req/menit/IP (`MAX_REQUESTS_PER_MINUTE`).
 - `src/services/friendly.js` — FriendlyCaptcha PoW v1 (solver WASM resmi `friendly-pow`)
 - `src/services/hcaptcha.js` — hCaptcha checkbox/invisible via browser (best-effort, fail-fast saat image challenge)
 - `src/services/aliyun.js` — Aliyun Captcha 2.0 harvest (best-effort, closed-loop puzzle drag + jimp gap-detect)
+- `src/services/extractAliyun.js` — deteksi sceneId/prefix/region Aliyun dari URL halaman target
 - `src/services/cloudflare.js` — challenge clicker → cf_clearance
