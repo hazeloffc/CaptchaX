@@ -516,7 +516,7 @@ Bila Aliyun Captcha terdeteksi, respons menyertakan `aliyun_hint` yang mengarahk
 | FriendlyCaptcha | `FCMGEMUD2M567T8G` (demo homepage) | solusi valid |
 
 <p align="center">
-  <img src="assets/character-01.png" alt="CaptchaX mascot" width="380">
+  <img src="assets/konata.png" alt="CaptchaX mascot" width="380">
 </p>
 
 ---
