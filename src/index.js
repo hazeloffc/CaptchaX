@@ -20,11 +20,16 @@ app.use('/api', healthRoute);
 app.get('/', (req, res) => {
   res.json({
     name: 'Captcha Solver JS',
-    version: '2.0.0',
+    version: '3.0.0',
     endpoints: {
-      'POST /api/turnstile': 'Solve Turnstile captcha',
-      'POST /api/captchav3': 'Solve ReCaptcha v3 (no browser)',
+      'POST /api/turnstile': 'Solve Turnstile (min, fake page, optional action)',
+      'POST /api/turnstile-max': 'Solve Turnstile on real page URL',
+      'POST /api/recaptcha-v2': 'Solve reCAPTCHA v2 checkbox (browser)',
+      'POST /api/captchav3': 'Solve reCAPTCHA v3 (no browser)',
+      'POST /api/hcaptcha': 'Solve hCaptcha checkbox (experimental)',
       'POST /api/cloudflare': 'Bypass Cloudflare challenge (cf_clearance)',
+      'POST /api/waf-session': 'Get WAF session cookies + headers',
+      'POST /api/source': 'Get rendered page HTML source',
       'GET /api/health': 'Health check'
     },
     usage: {
@@ -34,7 +39,25 @@ app.get('/', (req, res) => {
         body: {
           sitekey: '0x4AAAAAA...',
           siteurl: 'https://example.com',
-          timeout: 45
+          timeout: 45,
+          action: 'login'
+        }
+      },
+      turnstileMax: {
+        method: 'POST',
+        url: '/api/turnstile-max',
+        body: {
+          url: 'https://example.com/page-with-turnstile',
+          timeout: 60
+        }
+      },
+      recaptchaV2: {
+        method: 'POST',
+        url: '/api/recaptcha-v2',
+        body: {
+          sitekey: '6Le-wvk....',
+          siteurl: 'https://example.com',
+          timeout: 60
         }
       },
       captchav3: {

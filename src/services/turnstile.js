@@ -169,11 +169,22 @@ class BypassService {
     }
   }
 
-  async solveTurnstileMin(url, siteKey, proxy, timeout = 60000) {
+  async solveTurnstileMin(url, siteKey, proxy, timeout = 60000, opts = {}) {
     const startTime = Date.now();
     try {
       if (!url || !siteKey) {
         throw new Error("Missing url or siteKey parameter");
+      }
+
+      const action = opts && opts.action
+        ? String(opts.action).replace(/[^a-zA-Z0-9 _-]/g, "").slice(0, 64)
+        : "";
+      let html = this.fakePageContent.replace(/<site-key>/g, siteKey);
+      if (action) {
+        html = html.replace(
+          `sitekey: '${siteKey}',`,
+          `sitekey: '${siteKey}',\n                action: '${action}',`
+        );
       }
 
       const token = await this.browserService.withBrowserContext(async (context) => {
@@ -193,7 +204,7 @@ class BypassService {
             await request.respond({
               status: 200,
               contentType: "text/html",
-              body: this.fakePageContent.replace(/<site-key>/g, siteKey),
+              body: html,
             });
           } else {
             await request.continue();
