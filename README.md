@@ -10,24 +10,17 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ryuhandev/CaptchaX/stargazers"><img src="https://img.shields.io/github/stars/ryuhandev/CaptchaX?style=for-the-badge&logo=github&label=stars&color=2563eb" alt="Stars"></a>
-  <a href="https://github.com/ryuhandev/CaptchaX/forks"><img src="https://img.shields.io/github/forks/ryuhandev/CaptchaX?style=for-the-badge&logo=github&label=forks&color=4f46e5" alt="Forks"></a>
-  <a href="https://github.com/ryuhandev/CaptchaX/watchers"><img src="https://img.shields.io/github/watchers/ryuhandev/CaptchaX?style=for-the-badge&logo=github&label=watchers&color=7c3aed" alt="Watchers"></a>
-  <a href="https://github.com/ryuhandev/CaptchaX/issues"><img src="https://img.shields.io/github/issues/ryuhandev/CaptchaX?style=for-the-badge&logo=github&label=issues&color=ef4444" alt="Issues"></a>
+  <img src="https://img.shields.io/badge/repo-private-181717?style=for-the-badge&logo=github&logoColor=white" alt="Private">
+  <img src="https://img.shields.io/badge/version-5.1.1-4f46e5?style=for-the-badge" alt="Version">
+  <a href="https://github.com/ryuhandev/CaptchaX/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-22c55e?style=for-the-badge" alt="License"></a>
+  <img src="https://img.shields.io/badge/status-production-16a34a?style=for-the-badge" alt="Status">
 </p>
 
 <p align="center">
-  <a href="https://github.com/ryuhandev/CaptchaX/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ryuhandev/CaptchaX?style=for-the-badge&label=license&color=22c55e" alt="License"></a>
-  <a href="https://github.com/ryuhandev/CaptchaX/commits/main"><img src="https://img.shields.io/github/last-commit/ryuhandev/CaptchaX?style=for-the-badge&label=last%20commit&color=0891b2" alt="Last commit"></a>
-  <a href="https://github.com/ryuhandev/CaptchaX/pulse"><img src="https://img.shields.io/github/commit-activity/m/ryuhandev/CaptchaX?style=for-the-badge&label=aktivitas&color=0ea5e9" alt="Commit activity"></a>
-  <a href="https://github.com/ryuhandev/CaptchaX"><img src="https://img.shields.io/github/repo-size/ryuhandev/CaptchaX?style=for-the-badge&label=repo%20size&color=64748b" alt="Repo size"></a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/ryuhandev/CaptchaX/blob/main/package.json"><img src="https://img.shields.io/github/package-json/v/ryuhandev/CaptchaX?style=for-the-badge&label=version&color=4f46e5" alt="Version"></a>
   <img src="https://img.shields.io/badge/node-%3E%3D18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node">
   <img src="https://img.shields.io/badge/express-4.x-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express">
   <img src="https://img.shields.io/badge/puppeteer--real--browser-1.4-40B5A4?style=for-the-badge&logo=puppeteer&logoColor=white" alt="Puppeteer">
+  <img src="https://img.shields.io/badge/javascript-100%25-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
 </p>
 
 <p align="center">
@@ -43,8 +36,7 @@
 </p>
 
 <p align="center">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=ryuhandev&repo=CaptchaX&theme=blueberry&hide_border=true" alt="CaptchaX repo card" height="150">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=ryuhandev&repo=CaptchaX&layout=compact&theme=blueberry&hide_border=true" alt="CaptchaX languages" height="150">
+  <img src="https://skillicons.dev/icons?i=nodejs,express,docker" alt="Tech stack" height="55">
 </p>
 
 ---
