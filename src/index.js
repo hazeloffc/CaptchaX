@@ -20,7 +20,7 @@ app.use('/api', healthRoute);
 app.get('/', (req, res) => {
   res.json({
     name: 'Captcha Solver JS',
-    version: '5.1.0',
+    version: '5.1.1',
     endpoints: {
       'POST /api/turnstile': 'Solve Turnstile (min, fake page, optional action)',
       'POST /api/turnstile-max': 'Solve Turnstile on real page URL',
@@ -29,6 +29,7 @@ app.get('/', (req, res) => {
       'POST /api/friendly': 'Solve FriendlyCaptcha PoW (official solver)',
       'POST /api/hcaptcha': 'Solve hCaptcha checkbox (best-effort)',
       'POST /api/aliyun': 'Solve Aliyun Captcha 2.0 (sceneId+prefix, best-effort)',
+      'POST /api/aliyun-extract': 'Extract Aliyun sceneId+prefix+region from target page URL',
       'POST /api/cloudflare': 'Bypass Cloudflare challenge (cf_clearance)',
       'POST /api/waf-session': 'Get WAF session cookies + headers',
       'POST /api/source': 'Get rendered page HTML source',

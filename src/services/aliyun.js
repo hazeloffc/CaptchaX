@@ -457,7 +457,7 @@ async function solveAliyun({
 
   const ua =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-  const html = buildAliyunPage({ sceneId, prefix, region, language, mode, sdkUrl });
+  const htmlFor = (r) => buildAliyunPage({ sceneId, prefix, region: r, language, mode, sdkUrl });
   const deadline = Date.now() + Math.min(Math.max(timeout || 120, 20), 300) * 1000;
 
   const dbg = { stages: [], attempts: [], fails: [], instMethods: [], type: null, screenshot: null };
@@ -484,63 +484,111 @@ async function solveAliyun({
     throw err;
   };
 
-  const token = await browserService.withBrowserContext(async (context) => {
-    const page = await context.newPage();
-    try {
-      await page.setUserAgent(ua).catch(() => {});
-    } catch (e) {}
-
-    await page.setRequestInterception(true);
-    page.on("request", async (request) => {
-      try {
-        const rt = request.resourceType();
-        let isMain = true;
-        try {
-          const f = request.frame();
-          if (f && page.mainFrame && f !== page.mainFrame()) isMain = false;
-        } catch (e) {}
-        const isHarvest = (request.url() || "").startsWith(HARVEST_URL);
-        if (rt === "document" && isMain && isHarvest) {
-          await request.respond({ status: 200, contentType: "text/html; charset=utf-8", body: html });
-        } else {
-          await request.continue();
-        }
-      } catch (e) {
-        try {
-          await request.continue();
-        } catch (_) {}
+  const INIT_BUDGET_MS = 12000;
+  const waitInit = async (p) => {
+    const t0 = Date.now();
+    let last = null;
+    while (Date.now() - t0 < INIT_BUDGET_MS) {
+      const st = await getAliState(p);
+      last = st;
+      if (st && st.inited) return { ok: true, st };
+      // Fail fast on explicit init errors (SDK loaded but rejected our params).
+      if (st && (st.sdkErr || (st.fails || []).some((f) => /INIT_FAIL|init-error|script-load-error/i.test(f)))) {
+        return { ok: false, st, fast: true };
       }
-    });
-
-    mark("goto");
-    try {
-      await page.goto(HARVEST_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
-    } catch (e) {
-      await fail(page, `Harvest page navigation failed: ${e.message}`);
+      await sleep(400);
     }
+    return { ok: false, st: last, timeout: true };
+  };
+  const describeInit = (st) => {
+    if (!st) return "page eval failed";
+    const f = (st.fails || [])[0];
+    if (f && /INIT_FAIL/.test(f)) return `INIT_FAIL (${f.slice(0, 140)})`;
+    if (st.sdkErr) return String(st.sdkErr).slice(0, 160);
+    if (f) return String(f).slice(0, 160);
+    if (!st.sdkLoaded) return "SDK script failed to load (network blocked? custom sdkUrl?)";
+    return "initAliyunCaptcha not ready (timeout)";
+  };
 
-    // 1. SDK init.
-    mark("wait-init");
-    try {
-      await page.waitForFunction(() => window.__ali && window.__ali.inited === true, {
-        timeout: 30000,
-        polling: 400,
+  const token = await browserService.withBrowserContext(async (context) => {
+    // 1. SDK init with automatic region fallback (requested region first).
+    const candidates = region === "cn" ? ["cn", "sgp"] : ["sgp", "cn"];
+    dbg.initErrors = [];
+    let page = null;
+    for (const r of candidates) {
+      const html = htmlFor(r);
+      const p = await context.newPage();
+      try {
+        await p.setUserAgent(ua).catch(() => {});
+      } catch (e) {}
+
+      await p.setRequestInterception(true);
+      p.on("request", async (request) => {
+        try {
+          const rt = request.resourceType();
+          let isMain = true;
+          try {
+            const f = request.frame();
+            if (f && p.mainFrame && f !== p.mainFrame()) isMain = false;
+          } catch (e) {}
+          const isHarvest = (request.url() || "").startsWith(HARVEST_URL);
+          if (rt === "document" && isMain && isHarvest) {
+            await request.respond({ status: 200, contentType: "text/html; charset=utf-8", body: html });
+          } else {
+            await request.continue();
+          }
+        } catch (e) {
+          try {
+            await request.continue();
+          } catch (_) {}
+        }
       });
-    } catch (e) {
-      const st = await getAliState(page);
-      const why = !st
-        ? "page eval failed"
-        : st.sdkErr
-          ? st.sdkErr
-          : !st.sdkLoaded
-            ? "SDK script failed to load (network blocked? custom sdkUrl?)"
-            : "initAliyunCaptcha never became ready (wrong sceneId/prefix/region?)";
-      await fail(page, `Aliyun SDK init timeout (${why})`);
+
+      mark(`goto:${r}`);
+      try {
+        await p.goto(HARVEST_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+      } catch (e) {
+        dbg.initErrors.push(`${r}: navigation failed (${e.message})`.slice(0, 160));
+        try {
+          await p.close().catch(() => {});
+        } catch (_) {}
+        continue;
+      }
+
+      mark(`wait-init:${r}`);
+      const res = await waitInit(p);
+      if (res.ok) {
+        page = p;
+        dbg.region = r;
+        if (r !== region) mark(`region-fallback:${r}`);
+        mark("inited");
+        if (res.st) dbg.instMethods = res.st.instMethods || [];
+        break;
+      }
+      const why = describeInit(res.st);
+      dbg.initErrors.push(`${r}: ${why}`);
+      mark(`init-fail:${r}`);
+      if (res.st) dbg.fails = res.st.fails || [];
+      if (debug) {
+        try {
+          dbg.screenshot = await p
+            .screenshot({ type: "jpeg", quality: 55, encoding: "base64" })
+            .catch(() => null);
+        } catch (e) {}
+      }
+      try {
+        await p.close().catch(() => {});
+      } catch (_) {}
     }
-    mark("inited");
-    {
-      const st = await getAliState(page);
-      if (st) dbg.instMethods = st.instMethods || [];
+
+    if (!page) {
+      const err = new Error(
+        `Aliyun init gagal — sceneId/prefix/region tidak valid atau scene tidak aktif [${dbg.initErrors.join(" | ")}]. ` +
+          `Ambil nilai yang benar dari Network tab situs target saat captcha muncul: prefix = subdomain dari https://<prefix>.captcha-open.*.aliyuncs.com, ` +
+          `sceneId dari payload request, region samakan dengan console (cn/sgp). Alternatif: POST /api/aliyun-extract {"url":"..."} untuk deteksi otomatis.`
+      );
+      err.debug = dbg;
+      throw err;
     }
 
     const getVerify = async () => {
