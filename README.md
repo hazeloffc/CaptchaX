@@ -82,13 +82,16 @@ hCaptcha checkbox via browser (best-effort — lolos bila tanpa image challenge)
 ```
 
 ### POST /api/aliyun
-Aliyun Captcha 2.0 ala CapMonster (best-effort): widget dirender di halaman minimal milik sendiri bermodal `sceneId` + `prefix` situs target — tanpa mengunjungi situs target. TRACELESS/ONE_CLICK/SLIDE tanpa CV; PUZZLE pakai deteksi gap (jimp) + drag overshoot ala manusia.
+Aliyun Captcha 2.0 ala CapMonster (best-effort): widget dirender di halaman minimal milik sendiri bermodal `sceneId` + `prefix` situs target — tanpa mengunjungi situs target.
 ```json
 { "sceneId": "XXXX", "prefix": "xxxxxx", "region": "sgp", "timeout": 120 }
 ```
 `sceneId` + `prefix` diambil dari Network tab situs target (request ke `*.captcha-open.aliyuncs.com`), `region`: `sgp`/`cn` (samakan dengan konfigurasi situs).
+Opsional: `language` (`en`/`cn`/`tw`), `mode` (`popup`/`embed`/`float`), `sdkUrl` (override CDN SDK), `debug: true` (balikan `debug`: stages, attempts, screenshot saat gagal).
+Cara kerja: TRACELESS lolos otomatis; BEHAVIOR-SLIDE drag penuh ala manusia; PUZZLE-SLIDE deteksi gap (`shadow.png` vs `back.png`, template-match jimp) + drag closed-loop (posisi piece dibaca live tiap langkah sampai tepat di gap) + retry multi-attempt dengan koreksi.
 Response: `{ "success": true, "verifyParam": "...", "duration": 25.4 }`
 `verifyParam` (captchaVerifyParam) langsung dipakai untuk request bisnis ke server situs target. Token sekali pakai & terikat sesi — verifikasi dari IP yang sama.
+Tipe icon-click ("klik berurutan") tidak didukung dan dijawab jujur `success:false`.
 
 ### POST /api/cloudflare
 Bypass Cloudflare challenge → `cf_clearance`.
@@ -130,6 +133,6 @@ Rate limit default 5 req/menit/IP (`MAX_REQUESTS_PER_MINUTE`).
 - `src/services/captchaV3.js` — reCAPTCHA v3 tanpa browser (anchor/reload)
 - `src/services/altcha.js` — Altcha PoW v1 (brute force SHA, sesuai `altcha-lib`)
 - `src/services/friendly.js` — FriendlyCaptcha PoW v1 (solver WASM resmi `friendly-pow`)
-- `src/services/hcaptcha.js` — hCaptcha checkbox via browser (best-effort)
-- `src/services/aliyun.js` — Aliyun Captcha 2.0 harvest (best-effort, jimp gap-detect)
+- `src/services/hcaptcha.js` — hCaptcha checkbox/invisible via browser (best-effort, fail-fast saat image challenge)
+- `src/services/aliyun.js` — Aliyun Captcha 2.0 harvest (best-effort, closed-loop puzzle drag + jimp gap-detect)
 - `src/services/cloudflare.js` — challenge clicker → cf_clearance

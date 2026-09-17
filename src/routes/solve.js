@@ -405,7 +405,7 @@ router.post('/hcaptcha', async (req, res) => {
       return res.status(429).json({ success: false, error: 'Rate limit exceeded' });
     }
 
-    const { sitekey, siteurl, timeout } = req.body;
+    const { sitekey, siteurl, timeout, rqdata, size, invisible, hl, theme, host, endpoint, assethost, imghost, reportapi, debug } = req.body;
 
     if (!sitekey) {
       return res.status(400).json({ success: false, error: 'sitekey is required' });
@@ -420,7 +420,7 @@ router.post('/hcaptcha', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid siteurl' });
     }
 
-    const solveTimeout = Math.min(Math.max(timeout || 60, 10), 120);
+    const solveTimeout = Math.min(Math.max(timeout || 60, 10), 180);
 
     browserService = new BrowserService();
     await browserService.initialize();
@@ -429,17 +429,33 @@ router.post('/hcaptcha', async (req, res) => {
       sitekey,
       url: siteurl,
       timeout: solveTimeout * 1000,
-      browserService
+      browserService,
+      rqdata,
+      size,
+      invisible,
+      hl,
+      theme,
+      host,
+      endpoint,
+      assethost,
+      imghost,
+      reportapi,
+      debug: debug === true
     });
 
     res.json({
       success: true,
       token: result.data,
-      duration: parseFloat(((Date.now() - startTime) / 1000).toFixed(2))
+      duration: parseFloat(((Date.now() - startTime) / 1000).toFixed(2)),
+      ...(debug === true && result.debug ? { debug: result.debug } : {})
     });
   } catch (error) {
     console.error('[hcaptcha] Error:', error.message);
-    res.json({ success: false, error: error.message });
+    res.json({
+      success: false,
+      error: error.message,
+      ...(req.body && req.body.debug === true && error.debug ? { debug: error.debug } : {})
+    });
   } finally {
     if (browserService) {
       await browserService.shutdown();
@@ -457,7 +473,7 @@ router.post('/aliyun', async (req, res) => {
       return res.status(429).json({ success: false, error: 'Rate limit exceeded' });
     }
 
-    const { sceneId, prefix, region, timeout } = req.body;
+    const { sceneId, prefix, region, language, mode, sdkUrl, timeout, debug } = req.body;
 
     if (!sceneId) {
       return res.status(400).json({ success: false, error: 'sceneId is required' });
@@ -475,18 +491,27 @@ router.post('/aliyun', async (req, res) => {
       sceneId,
       prefix,
       region: region || 'sgp',
+      language: language || 'en',
+      mode: mode || 'popup',
+      sdkUrl,
       timeout: solveTimeout,
+      debug: debug === true,
       browserService
     });
 
     res.json({
       success: true,
       verifyParam: result.data,
-      duration: parseFloat(((Date.now() - startTime) / 1000).toFixed(2))
+      duration: parseFloat(((Date.now() - startTime) / 1000).toFixed(2)),
+      ...(debug === true && result.debug ? { debug: result.debug } : {})
     });
   } catch (error) {
     console.error('[aliyun] Error:', error.message);
-    res.json({ success: false, error: error.message });
+    res.json({
+      success: false,
+      error: error.message,
+      ...(req.body && req.body.debug === true && error.debug ? { debug: error.debug } : {})
+    });
   } finally {
     if (browserService) {
       await browserService.shutdown();
