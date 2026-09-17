@@ -3,8 +3,8 @@ const router = express.Router();
 const { BypassService } = require('../services/turnstile');
 const { BrowserService } = require('../services/browser');
 const { solveRecaptchaV3 } = require('../services/captchaV3');
-const { solveRecaptchaV2 } = require('../services/recaptchaV2');
-const { solveHCaptcha } = require('../services/hcaptcha');
+const { solveAltcha } = require('../services/altcha');
+const { solveFriendly } = require('../services/friendly');
 const { solveCloudflare } = require('../services/cloudflare');
 
 const requestCounts = new Map();
@@ -220,9 +220,8 @@ router.post('/turnstile-max', async (req, res) => {
   }
 });
 
-router.post('/recaptcha-v2', async (req, res) => {
+router.post('/altcha', async (req, res) => {
   const startTime = Date.now();
-  let browserService = null;
 
   try {
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -230,51 +229,36 @@ router.post('/recaptcha-v2', async (req, res) => {
       return res.status(429).json({ success: false, error: 'Rate limit exceeded' });
     }
 
-    const { sitekey, siteurl, timeout } = req.body;
+    const { challengeurl, challenge, max, start, timeout } = req.body;
 
-    if (!sitekey) {
-      return res.status(400).json({ success: false, error: 'sitekey is required' });
+    if (!challengeurl && !challenge) {
+      return res.status(400).json({ success: false, error: 'challengeurl or challenge is required' });
     }
-    if (!siteurl) {
-      return res.status(400).json({ success: false, error: 'siteurl is required' });
-    }
-
-    try {
-      new URL(siteurl);
-    } catch {
-      return res.status(400).json({ success: false, error: 'Invalid siteurl' });
+    if (challengeurl) {
+      try {
+        new URL(challengeurl);
+      } catch {
+        return res.status(400).json({ success: false, error: 'Invalid challengeurl' });
+      }
     }
 
-    const solveTimeout = Math.min(Math.max(timeout || 60, 10), 120);
-
-    browserService = new BrowserService();
-    await browserService.initialize();
-
-    const result = await solveRecaptchaV2({
-      sitekey,
-      url: siteurl,
-      timeout: solveTimeout * 1000,
-      browserService
-    });
+    const result = await solveAltcha({ challengeurl, challenge, max, start, timeout });
 
     res.json({
       success: true,
-      token: result.data,
+      payload: result.data.payload,
+      number: result.data.number,
+      algorithm: result.data.algorithm,
       duration: parseFloat(((Date.now() - startTime) / 1000).toFixed(2))
     });
   } catch (error) {
-    console.error('[recaptcha-v2] Error:', error.message);
+    console.error('[altcha] Error:', error.message);
     res.json({ success: false, error: error.message });
-  } finally {
-    if (browserService) {
-      await browserService.shutdown();
-    }
   }
 });
 
-router.post('/hcaptcha', async (req, res) => {
+router.post('/friendly', async (req, res) => {
   const startTime = Date.now();
-  let browserService = null;
 
   try {
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -282,45 +266,31 @@ router.post('/hcaptcha', async (req, res) => {
       return res.status(429).json({ success: false, error: 'Rate limit exceeded' });
     }
 
-    const { sitekey, siteurl, timeout } = req.body;
+    const { sitekey, puzzleEndpoint, timeout } = req.body;
 
     if (!sitekey) {
       return res.status(400).json({ success: false, error: 'sitekey is required' });
     }
-    if (!siteurl) {
-      return res.status(400).json({ success: false, error: 'siteurl is required' });
+    if (puzzleEndpoint) {
+      try {
+        new URL(puzzleEndpoint);
+      } catch {
+        return res.status(400).json({ success: false, error: 'Invalid puzzleEndpoint' });
+      }
     }
 
-    try {
-      new URL(siteurl);
-    } catch {
-      return res.status(400).json({ success: false, error: 'Invalid siteurl' });
-    }
-
-    const solveTimeout = Math.min(Math.max(timeout || 60, 10), 120);
-
-    browserService = new BrowserService();
-    await browserService.initialize();
-
-    const result = await solveHCaptcha({
-      sitekey,
-      url: siteurl,
-      timeout: solveTimeout * 1000,
-      browserService
-    });
+    const result = await solveFriendly({ sitekey, puzzleEndpoint, timeout });
 
     res.json({
       success: true,
-      token: result.data,
+      solution: result.data.solution,
+      puzzles: result.data.puzzles,
+      field: result.data.field,
       duration: parseFloat(((Date.now() - startTime) / 1000).toFixed(2))
     });
   } catch (error) {
-    console.error('[hcaptcha] Error:', error.message);
+    console.error('[friendly] Error:', error.message);
     res.json({ success: false, error: error.message });
-  } finally {
-    if (browserService) {
-      await browserService.shutdown();
-    }
   }
 });
 

@@ -20,13 +20,13 @@ app.use('/api', healthRoute);
 app.get('/', (req, res) => {
   res.json({
     name: 'Captcha Solver JS',
-    version: '3.0.0',
+    version: '4.0.0',
     endpoints: {
       'POST /api/turnstile': 'Solve Turnstile (min, fake page, optional action)',
       'POST /api/turnstile-max': 'Solve Turnstile on real page URL',
-      'POST /api/recaptcha-v2': 'Solve reCAPTCHA v2 checkbox (browser)',
       'POST /api/captchav3': 'Solve reCAPTCHA v3 (no browser)',
-      'POST /api/hcaptcha': 'Solve hCaptcha checkbox (experimental)',
+      'POST /api/altcha': 'Solve Altcha PoW (challenge JSON or challengeurl)',
+      'POST /api/friendly': 'Solve FriendlyCaptcha PoW (official solver)',
       'POST /api/cloudflare': 'Bypass Cloudflare challenge (cf_clearance)',
       'POST /api/waf-session': 'Get WAF session cookies + headers',
       'POST /api/source': 'Get rendered page HTML source',
@@ -51,13 +51,20 @@ app.get('/', (req, res) => {
           timeout: 60
         }
       },
-      recaptchaV2: {
+      altcha: {
         method: 'POST',
-        url: '/api/recaptcha-v2',
+        url: '/api/altcha',
         body: {
-          sitekey: '6Le-wvk....',
-          siteurl: 'https://example.com',
+          challengeurl: 'https://example.com/altcha-challenge',
           timeout: 60
+        }
+      },
+      friendly: {
+        method: 'POST',
+        url: '/api/friendly',
+        body: {
+          sitekey: 'FCM...',
+          timeout: 180
         }
       },
       captchav3: {
