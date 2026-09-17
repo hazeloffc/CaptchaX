@@ -54,15 +54,26 @@ async function solveRecaptchaV2({ sitekey, url, timeout = 60000, browserService 
     });
 
     await page.goto(url, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector('iframe[src*="recaptcha/api2/anchor"]', { timeout: 20000 });
+    const anchorEl = await page.waitForSelector('iframe[src*="recaptcha/api2/anchor"]', { timeout: 30000 });
 
-    const anchor = page.frames().find((f) => {
+    let anchor = null;
+    for (let i = 0; i < 20 && !anchor; i++) {
       try {
-        return f.url().includes("recaptcha/api2/anchor");
-      } catch {
-        return false;
+        anchor = await anchorEl.contentFrame();
+      } catch (e) {}
+      if (!anchor) {
+        anchor = page.frames().find((f) => {
+          try {
+            return f.url().includes("recaptcha/api2/anchor");
+          } catch {
+            return false;
+          }
+        }) || null;
       }
-    });
+      if (!anchor) {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
     if (!anchor) {
       throw new Error("Recaptcha anchor frame not found");
     }

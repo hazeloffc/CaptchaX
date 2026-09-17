@@ -54,15 +54,17 @@ async function solveHCaptcha({ sitekey, url, timeout = 60000, browserService }) 
     });
 
     await page.goto(url, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector('iframe[src*="hcaptcha.com"]', { timeout: 20000 });
+    const frameEl = await page.waitForSelector('iframe[src*="hcaptcha.com"]', { timeout: 30000 });
 
-    const widget = page.frames().find((f) => {
+    let widget = null;
+    for (let i = 0; i < 20 && !widget; i++) {
       try {
-        return f.url().includes("hcaptcha.com");
-      } catch {
-        return false;
+        widget = await frameEl.contentFrame();
+      } catch (e) {}
+      if (!widget) {
+        await new Promise((r) => setTimeout(r, 500));
       }
-    });
+    }
     if (!widget) {
       throw new Error("hCaptcha frame not found");
     }
