@@ -95,4 +95,4 @@ const KasadaSolver = class {
   }
 };
 
-export { KasadaSolver };
+module.exports = { KasadaSolver };
